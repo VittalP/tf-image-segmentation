@@ -10,20 +10,7 @@ flags = tf.app.flags
 
 machine = socket.gethostname()
 
-if 'login-node' in machine:
-    # Add a path to a custom fork of TF-Slim
-    # Get it from here:
-    # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
-
-    flags.DEFINE_string("slim_path", "/home-4/vpremac1@jhu.edu/projects/tf-models/models/slim", "The path to tf slim repo")
-
-    # Add path to the cloned library
-    flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/", "Dir for tf-image-segmentation repo")
-    flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/", "Directory to save checkpoint models")
-
-if "ccvl-4gpu" in machine:
+if "ccvl-4" in machine:
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
@@ -35,6 +22,19 @@ if "ccvl-4gpu" in machine:
     flags.DEFINE_string("checkpoints_dir", "/home/vittal/work/ckpts/", "Directory where checkpoints are saved")
     flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", "Directory to save TF logs")
     flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
+
+if 'login' or 'gpu' in machine:
+    # Add a path to a custom fork of TF-Slim
+    # Get it from here:
+    # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
+
+    flags.DEFINE_string("slim_path", "/home-4/vpremac1@jhu.edu/projects/tf-models/models/slim", "The path to tf slim repo")
+
+    # Add path to the cloned library
+    flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
+    flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where checkpoints are saved")
+    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/", "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/", "Directory to save checkpoint models")
 
 if "thin6" in machine:
     # Add a path to a custom fork of TF-Slim
