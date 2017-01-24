@@ -15,7 +15,7 @@ if 'login-node' in machine:
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
 
-    flags.DEFINE_string("slim_path", "/home-4/vpremac1@jhu.edu/projects/tf-slim-models/models/slim", "The path to tf slim repo")
+    flags.DEFINE_string("slim_path", "/home-4/vpremac1@jhu.edu/projects/tf-models/models/slim", "The path to tf slim repo")
 
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/", "Dir for tf-image-segmentation repo")
