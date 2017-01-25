@@ -98,14 +98,14 @@ tf.summary.scalar('cross_entropy_loss', cross_entropy_sum)
 
 merged_summary_op = tf.summary.merge_all()
 
-summary_string_writer = tf.summary.FileWriter(log_folder)
+summary_string_writer = tf.summary.FileWriter(log_dir)
 
 # Create the log folder if doesn't exist yet
-if not os.path.exists(log_folder):
-     os.makedirs(log_folder)
+if not os.path.exists(log_dir):
+     os.makedirs(log_dir)
 
 #optimization_variables_initializer = tf.variables_initializer(adam_optimizer_variables)
-    
+
 #The op for initializing the variables.
 local_vars_init_op = tf.local_variables_initializer()
 
@@ -118,34 +118,34 @@ saver = tf.train.Saver(model_variables)
 
 
 with tf.Session()  as sess:
-    
+
     sess.run(combined_op)
     init_fn(sess)
 
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-    
+
     # Let's read off 3 batches just for example
     for i in xrange(11127 * 10):
-    
+
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
                                                       train_step ])
 
         summary_string_writer.add_summary(summary_string, 11127 * 20 + i)
-        
+
         print("step :" + str(i) + " Loss: " + str(cross_entropy))
-        
+
         if i > 0 and i % 11127 == 0:
             save_path = saver.save(sess, FLAGS.save_dir + "model_fcn8s_epoch_" + str(i) + ".ckpt")
             print("Model saved in file: %s" % save_path)
-            
-        
+
+
     coord.request_stop()
     coord.join(threads)
-    
+
     save_path = saver.save(sess, FLAGS.save_dir + "model_fcn8s_final.ckpt")
     print("Model saved in file: %s" % save_path)
-    
+
 summary_string_writer.close()
 
