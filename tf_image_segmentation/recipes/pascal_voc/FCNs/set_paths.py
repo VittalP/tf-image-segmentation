@@ -10,7 +10,7 @@ flags = tf.app.flags
 
 machine = socket.gethostname()
 
-if "ccvl-4" in machine:
+if machine == 'ccvl-4gpu':
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
@@ -23,7 +23,7 @@ if "ccvl-4" in machine:
     flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", "Directory to save TF logs")
     flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
 
-if 'login' or 'gpu' in machine:
+elif 'login' or 'gpu' in machine:
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
@@ -36,7 +36,7 @@ if 'login' or 'gpu' in machine:
     flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/", "Directory to save TF logs")
     flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/", "Directory to save checkpoint models")
 
-if "thin6" in machine:
+elif "thin6" in machine:
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
