@@ -3,14 +3,14 @@ import sys
 import os
 import socket
 
-# Use second GPU -- change if you want to use a first one
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-
 flags = tf.app.flags
 
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':
+    # Use second GPU -- change if you want to use a first one
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+    
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
@@ -37,6 +37,9 @@ elif 'login' or 'gpu' in machine:
     flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
 
 elif "thin6" in machine:
+    # Use second GPU -- change if you want to use a first one
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+    
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
