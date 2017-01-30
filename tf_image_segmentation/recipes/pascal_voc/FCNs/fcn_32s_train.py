@@ -15,7 +15,7 @@ import set_paths # Sets appropriate paths and provides access to log_dir and che
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = FLAGS.log_dir + "fcn-32s/"
+log_dir = FLAGS.log_dir + "fcn-32s-outer/"
 
 
 slim = tf.contrib.slim
