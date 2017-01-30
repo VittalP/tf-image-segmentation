@@ -5,6 +5,8 @@ import socket
 
 flags = tf.app.flags
 
+exp_name = 'outer_prod/'
+
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':
@@ -20,8 +22,8 @@ if machine == 'ccvl-4gpu':
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home/vittal/work/segmentation/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
     flags.DEFINE_string("checkpoints_dir", "/home/vittal/work/ckpts/", "Directory where checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
+    flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/" + exp_name, "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/"+ exp_name, "Directory to save checkpoint models")
 
 elif 'login' or 'gpu' in machine:
     # Add a path to a custom fork of TF-Slim
@@ -33,8 +35,8 @@ elif 'login' or 'gpu' in machine:
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
     flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
+    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/" + exp_name, "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/" + exp_name, "Directory to save checkpoint models")
 
 elif "thin6" in machine:
     # Use second GPU -- change if you want to use a first one
