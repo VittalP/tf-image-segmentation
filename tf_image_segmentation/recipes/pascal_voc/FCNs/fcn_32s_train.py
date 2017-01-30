@@ -136,7 +136,7 @@ with tf.Session()  as sess:
                                                       merged_summary_op,
                                                       train_step ])
 
-        print("Current loss: " + str(cross_entropy))
+        print("Step: " + str(i) + " Loss: " + str(cross_entropy))
 
         summary_string_writer.add_summary(summary_string, i)
 
