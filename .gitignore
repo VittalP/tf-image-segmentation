@@ -2,6 +2,10 @@
 .ipynb_checkpoints
 *.pyc
 *.tfrecords
+*.log
+
+# Files
+Untitled*
 
 # directories to ignore
 /log_dir
