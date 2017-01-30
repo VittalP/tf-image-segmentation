@@ -109,6 +109,8 @@ summary_string_writer = tf.summary.FileWriter(log_dir)
 # Create the log folder if doesn't exist yet
 if not os.path.exists(log_dir):
      os.makedirs(log_dir)
+if not os.path.exists(FLAGS.save_dir):
+     os.makedirs(FLAGS.save_dir)
 
 #The op for initializing the variables.
 local_vars_init_op = tf.local_variables_initializer()
