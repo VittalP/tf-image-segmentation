@@ -17,20 +17,20 @@ def extract_vgg_16_mapping_without_fc8(vgg_16_variables_mapping):
     tasks. Last layer usually has different size, depending on the number of classes
     to be predicted. This is why we omit it from the dict and those variables will
     be randomly initialized later.
-    
+
     Parameters
     ----------
     vgg_16_variables_mapping : dict {string: variable}
         Dict which maps the FCN-32s model's variables to VGG-16 checkpoint variables
         names. Look at FCN-32s() function for more details.
-    
+
     Returns
     -------
     updated_mapping : dict {string: variable}
         Dict which maps the FCN-32s model's variables to VGG-16 checkpoint variables
         names without fc8 layer mapping.
     """
-    
+
     # TODO: review this part one more time
     vgg_16_keys = vgg_16_variables_mapping.keys()
 
@@ -38,11 +38,11 @@ def extract_vgg_16_mapping_without_fc8(vgg_16_variables_mapping):
 
     for key in vgg_16_keys:
 
-        if 'fc8' not in key:
+        if ('fc8' not in key) and ('fc7_bottleneck' not in key) and ('fc7_outer_logits' not in key):
             vgg_16_without_fc8_keys.append(key)
 
     updated_mapping = {key: vgg_16_variables_mapping[key] for key in vgg_16_without_fc8_keys}
-    
+
     return updated_mapping
 
 
@@ -56,11 +56,11 @@ def FCN_32s(image_batch_tensor,
     The network subsamples the input by a factor of 32 and uses the bilinear
     upsampling kernel to upsample prediction by a factor of 32. This means that
     if the image size is not of the factor 32, the prediction of different size
-    will be delivered. To adapt the network for an any size input use 
+    will be delivered. To adapt the network for an any size input use
     adapt_network_for_any_size_input(FCN_32s, 32). Note: the upsampling kernel
     is fixed in this model definition, because it didn't give significant
     improvements according to aforementioned paper.
-    
+
     Parameters
     ----------
     image_batch_tensor : [batch_size, height, width, depth] Tensor
@@ -71,7 +71,7 @@ def FCN_32s(image_batch_tensor,
     is_training : boolean
         An argument specifying if the network is being evaluated or trained.
         It affects the work of underlying dropout layer of VGG-16.
-    
+
     Returns
     -------
     upsampled_logits : [batch_size, height, width, number_of_classes] Tensor
@@ -84,7 +84,7 @@ def FCN_32s(image_batch_tensor,
         names. We need this to initilize the weights of FCN-32s model with VGG-16 from
         checkpoint file. Look at ipython notebook for examples.
     """
-    
+
     with tf.variable_scope("fcn_32s") as fcn_32s_scope:
 
         upsample_factor = 32
@@ -127,6 +127,42 @@ def FCN_32s(image_batch_tensor,
                                                   output_shape=upsampled_logits_shape,
                                                   strides=[1, upsample_factor, upsample_factor, 1])
 
+        fc7_features = end_points['fcn_32s/vgg_16/fc7']
+        fc7_bottleneck = slim.conv2d(fc7_features, 64, [1, 1],
+                                     activation_fn=tf.nn.relu,
+                                     normalizer_fn=None,
+                                     weights_initializer=tf.zeros_initializer,
+                                     scope='fc7_bottleneck')
+
+        reshape_shape = tf.pack([
+                                 tf.shape(fc7_bottleneck)[0],
+                                 tf.shape(fc7_bottleneck)[1]*tf.shape(fc7_bottleneck)[2],
+                                 tf.shape(fc7_bottleneck)[-1]
+                                ])
+        fc7_bottleneck = tf.reshape(fc7_bottleneck, shape=reshape_shape)
+        fc7_outer = tf.expand_dims(fc7_bottleneck, 2) * tf.expand_dims(fc7_bottleneck, 3)
+        fc7_outer = tf.reshape(fc7_outer, shape=[
+                                                tf.shape(fc7_features)[0],
+                                                tf.shape(fc7_features)[1],
+                                                tf.shape(fc7_features)[2],
+                                                64*64
+                                                ])
+        fc7_outer_logits = slim.conv2d(fc7_outer,
+                                       number_of_classes,
+                                       [1, 1],
+                                       activation_fn=None,
+                                       normalizer_fn=None,
+                                       weights_initializer=tf.zeros_initializer,
+                                       scope='fc7_outer_logits')
+
+        # Perform the upsampling
+        fc7_outer_upsampled_logits = tf.nn.conv2d_transpose(fc7_outer_logits,
+                                                  upsample_filter_tensor,
+                                                  output_shape=upsampled_logits_shape,
+                                                  strides=[1, upsample_factor, upsample_factor, 1])
+
+        fused_fc7_outer_fc8_logits = fc7_outer_upsampled_logits + upsampled_logits
+
         # Map the original vgg-16 variable names
         # to the variables in our model. This is done
         # to make it possible to use assign_from_checkpoint_fn()
@@ -143,4 +179,4 @@ def FCN_32s(image_batch_tensor,
             original_vgg_16_checkpoint_string = variable.name[len(fcn_32s_scope.original_name_scope):-2]
             vgg_16_variables_mapping[original_vgg_16_checkpoint_string] = variable
 
-    return upsampled_logits, vgg_16_variables_mapping
+    return fused_fc7_outer_fc8_logits, vgg_16_variables_mapping
