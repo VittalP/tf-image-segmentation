@@ -127,8 +127,9 @@ def FCN_32s(image_batch_tensor,
                                                   output_shape=upsampled_logits_shape,
                                                   strides=[1, upsample_factor, upsample_factor, 1])
 
-        fc7_features = end_points['fcn_32s/vgg_16/fc7']
-        fc7_bottleneck = slim.conv2d(fc7_features, 64, [1, 1],
+        fc7_features = end_points['fcn_32s/vgg_16/fc6']
+        num_channels = 256
+	fc7_bottleneck = slim.conv2d(fc7_features, num_channels, [1, 1],
                                      activation_fn=tf.nn.relu,
                                      normalizer_fn=None,
                                      weights_initializer=tf.zeros_initializer,
@@ -145,7 +146,7 @@ def FCN_32s(image_batch_tensor,
                                                 tf.shape(fc7_features)[0],
                                                 tf.shape(fc7_features)[1],
                                                 tf.shape(fc7_features)[2],
-                                                64*64
+                                                num_channels*num_channels
                                                 ])
         fc7_outer_logits = slim.conv2d(fc7_outer,
                                        number_of_classes,
