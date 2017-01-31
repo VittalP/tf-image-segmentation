@@ -10,7 +10,9 @@ import numpy as np
 import skimage.io as io
 import os, sys
 from matplotlib import pyplot as plt
-import set_paths # Sets appropriate paths and provides access to log_dir and checkpoint_path via FLAGS
+
+sys.path.append(os.path.join(os.path.join(os.getcwd(), "../../../../../tf-image-segmentation")))
+from tf_image_segmentation.utils import set_paths # Sets appropriate paths and provides access to log_dir and checkpoint_path via FLAGS
 
 FLAGS = set_paths.FLAGS
 
@@ -22,7 +24,7 @@ slim = tf.contrib.slim
 vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
 
 if not os.path.isfile(vgg_checkpoint_path):
-    import download_ckpt
+    from tf_image_segmentation.utils import download_ckpt
     download_ckpt('http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz')
 
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
@@ -108,7 +110,9 @@ summary_string_writer = tf.summary.FileWriter(log_dir)
 
 # Create the log folder if doesn't exist yet
 if not os.path.exists(log_dir):
-     os.makedirs(log_dir)
+    os.makedirs(log_dir)
+if not os.path.exists(FLAGS.save_dir):
+    os.makedirs(FLAGS.save_dir)
 
 #The op for initializing the variables.
 local_vars_init_op = tf.local_variables_initializer()
@@ -155,6 +159,3 @@ summary_string_writer.close()
 
 
 # In[ ]:
-
-
-
