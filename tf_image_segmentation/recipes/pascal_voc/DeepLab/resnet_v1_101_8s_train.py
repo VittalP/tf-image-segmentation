@@ -11,7 +11,7 @@ from tf_image_segmentation.utils import set_paths # Sets appropriate paths and p
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = FLAGS.log_dir + "deeplab/"
+log_dir = os.path.join(FLAGS.log_dir + "deeplab/")
 
 slim = tf.contrib.slim
 resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
@@ -33,7 +33,7 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
-tfrecord_filename = 'pascal_augmented_train.tfrecords'
+tfrecord_filename = os.path.join(FLAGS.data_dir + 'pascal_augmented_train.tfrecords')
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
