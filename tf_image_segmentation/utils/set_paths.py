@@ -34,9 +34,9 @@ elif 'login' or 'gpu' in machine:
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
     flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where ImageNet pretrained checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/", "Directory to save trained models")
-    flags.DEFINE_string("data_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/data/", "Directory which hosts datasets")
+    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/log_dir/", "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/save_dir/", "Directory to save trained models")
+    flags.DEFINE_string("data_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/data/", "Directory which hosts datasets")
 
 elif "thin6" in machine:
     # Add a path to a custom fork of TF-Slim
