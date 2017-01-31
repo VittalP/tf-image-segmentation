@@ -24,8 +24,8 @@ slim = tf.contrib.slim
 vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
 
 if not os.path.isfile(vgg_checkpoint_path):
-    from tf_image_segmentation.utils import download_ckpt
-    download_ckpt('http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz')
+    import tf_image_segmentation.utils.download_ckpt as dl_ckpt
+    dl_ckpt.download_ckpt('http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz')
 
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.models.fcn_32s import FCN_32s, extract_vgg_16_mapping_without_fc8
