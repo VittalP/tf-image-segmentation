@@ -1,19 +1,19 @@
 import tensorflow as tf
 import sys
 import os
+import socket
 
 # Use second GPU -- change if you want to use a first one
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 flags = tf.app.flags
 
-machine = '4GPU'
+machine = socket.gethostname()
 
-if machine == '4GPU':
+if machine == 'ccvl-4gpu':
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
-
 
     flags.DEFINE_string("slim_path", "/home/vittal/work/tf-slim-models/models/slim", "The path to tf slim repo")
 
@@ -23,11 +23,23 @@ if machine == '4GPU':
     flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", "Directory to save TF logs")
     flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", "Directory to save checkpoint models")
 
-if machine == 'daniil':
+elif 'login' or 'gpu' in machine:
     # Add a path to a custom fork of TF-Slim
     # Get it from here:
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
 
+    flags.DEFINE_string("slim_path", "/home-4/vpremac1@jhu.edu/projects/tf-models/models/slim", "The path to tf slim repo")
+
+    # Add path to the cloned library
+    flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
+    flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where checkpoints are saved")
+    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/log_dir/", "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/tf_image_segmentation/save_dir/", "Directory to save checkpoint models")
+
+elif "thin6" in machine:
+    # Add a path to a custom fork of TF-Slim
+    # Get it from here:
+    # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
 
     flags.DEFINE_string("slim_path", "/home/dpakhom1/workspace/my_models/slim/", "The path to tf slim repo")
 
