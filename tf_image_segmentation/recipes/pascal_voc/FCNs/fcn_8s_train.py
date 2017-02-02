@@ -32,14 +32,16 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
+num_epochs = 10
 tfrecord_filename = 'pascal_augmented_train.tfrecords'
+num_training_images = 11127
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
 fcn_16s_checkpoint_path = FLAGS.save_dir + 'model_fcn16s_final.ckpt'
 
 filename_queue = tf.train.string_input_producer(
-    [tfrecord_filename], num_epochs=10)
+    [tfrecord_filename], num_epochs=num_epochs)
 
 image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
