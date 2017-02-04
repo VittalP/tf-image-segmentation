@@ -1,26 +1,27 @@
-
-# coding: utf-8
-
-# In[ ]:
-
-#%matplotlib inline
-
 import tensorflow as tf
 import numpy as np
 import skimage.io as io
 import os, sys
-from PIL import Image
-import set_paths
+from matplotlib import pyplot as plt
+
+
+sys.path.append(os.path.join(os.path.join(os.getcwd(), "../../../../../tf-image-segmentation")))
+from tf_image_segmentation.utils import set_paths # Sets appropriate paths and provides access to log_dir and checkpoint_path via FLAGS
 
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = FLAGS.log_dir + "fcn-8s/"
+log_dir = os.path.join(FLAGS.log_dir + "deeplab/")
 
 slim = tf.contrib.slim
+resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
+
+if not os.path.isfile(resnet_101_v1_checkpoint_path):
+    import tf_image_segmentation.utils.download_ckpt as dl_ckpt
+    dl_ckpt.download_ckpt('http://download.tensorflow.org/models/resnet_v1_101_2016_08_28.tar.gz')
 
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
-from tf_image_segmentation.models.fcn_8s import FCN_8s
+from tf_image_segmentation.models.resnet_v1_101_8s import resnet_v1_101_8s, extract_resnet_v1_101_mapping_without_logits
 
 from tf_image_segmentation.utils.pascal_voc import pascal_segmentation_lut
 
@@ -32,13 +33,12 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
-num_epochs = 10
-tfrecord_filename = 'pascal_augmented_train.tfrecords'
+num_epochs = 20
+tfrecord_filename = os.path.join(FLAGS.data_dir + 'pascal_augmented_train.tfrecords')
 num_training_images = 11127
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
-fcn_16s_checkpoint_path = FLAGS.save_dir + 'model_fcn16s_final.ckpt'
 
 filename_queue = tf.train.string_input_producer(
     [tfrecord_filename], num_epochs=num_epochs)
@@ -61,7 +61,7 @@ image_batch, annotation_batch = tf.train.shuffle_batch( [resized_image, resized_
                                              num_threads=2,
                                              min_after_dequeue=1000)
 
-upsampled_logits_batch, fcn_16s_variables_mapping = FCN_8s(image_batch_tensor=image_batch,
+upsampled_logits_batch, resnet_v1_101_variables_mapping = resnet_v1_101_8s(image_batch_tensor=image_batch,
                                                            number_of_classes=number_of_classes,
                                                            is_training=True)
 
@@ -75,8 +75,8 @@ valid_labels_batch_tensor, valid_logits_batch_tensor = get_valid_logits_and_labe
 cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
                                                           labels=valid_labels_batch_tensor)
 
-#cross_entropy_sum = tf.reduce_sum(cross_entropies)
-
+# Normalize the cross entropy -- the number of elements
+# is different during each step due to mask out regions
 cross_entropy_sum = tf.reduce_mean(cross_entropies)
 
 pred = tf.argmax(upsampled_logits_batch, dimension=3)
@@ -85,14 +85,15 @@ probabilities = tf.nn.softmax(upsampled_logits_batch)
 
 
 with tf.variable_scope("adam_vars"):
-    train_step = tf.train.AdamOptimizer(learning_rate=0.000000001).minimize(cross_entropy_sum)
+    train_step = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(cross_entropy_sum)
 
-
-#adam_optimizer_variables = slim.get_variables_to_restore(include=['adam_vars'])
 
 # Variable's initialization functions
-init_fn = slim.assign_from_checkpoint_fn(model_path=fcn_16s_checkpoint_path,
-                                         var_list=fcn_16s_variables_mapping)
+resnet_v1_101_without_logits_variables_mapping = extract_resnet_v1_101_mapping_without_logits(resnet_v1_101_variables_mapping)
+
+
+init_fn = slim.assign_from_checkpoint_fn(model_path=resnet_101_v1_checkpoint_path,
+                                         var_list=resnet_v1_101_without_logits_variables_mapping)
 
 global_vars_init_op = tf.global_variables_initializer()
 
@@ -105,8 +106,8 @@ summary_string_writer = tf.summary.FileWriter(log_dir)
 # Create the log folder if doesn't exist yet
 if not os.path.exists(log_dir):
      os.makedirs(log_dir)
-
-#optimization_variables_initializer = tf.variables_initializer(adam_optimizer_variables)
+if not os.path.exists(FLAGS.save_dir):
+     os.makedirs(FLAGS.save_dir)
 
 #The op for initializing the variables.
 local_vars_init_op = tf.local_variables_initializer()
@@ -127,27 +128,26 @@ with tf.Session()  as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
-    # Let's read off 3 batches just for example
-    for i in xrange(11127 * 10):
+    # 10 epochs
+    for i in xrange(num_training_images * num_epochs):
 
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
                                                       train_step ])
 
-        summary_string_writer.add_summary(summary_string, 11127 * 20 + i)
+        print("Iteration: " + str(i) + " Current loss: " + str(cross_entropy))
 
-        print("step :" + str(i) + " Loss: " + str(cross_entropy))
+        summary_string_writer.add_summary(summary_string, i)
 
-        if i > 0 and i % 11127 == 0:
-            save_path = saver.save(sess, FLAGS.save_dir + "model_fcn8s_epoch_" + str(i) + ".ckpt")
+        if i % num_training_images == 0:
+            save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s_epoch_" + str(i) + ".ckpt")
             print("Model saved in file: %s" % save_path)
 
 
     coord.request_stop()
     coord.join(threads)
 
-    save_path = saver.save(sess, FLAGS.save_dir + "model_fcn8s_final.ckpt")
+    save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s.ckpt")
     print("Model saved in file: %s" % save_path)
 
 summary_string_writer.close()
-

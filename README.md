@@ -14,9 +14,49 @@ VGG that are officially provided by TF-Slim library.
 
 So far, the framework contains an implementation of the FCN models (training
 and evaluation) in Tensorflow and TF-Slim library with training routine, reported accuracy,
-trained models for PASCAL VOC 2012 dataset.
+trained models for PASCAL VOC 2012 dataset. To train these models on your data, [convert your dataset
+to tfrecords](tf_image_segmentation/recipes/pascal_voc/convert_pascal_voc_to_tfrecords.ipynb) and follow the
+instructions below.
 
 The end goal is to provide utilities to convert other datasets, report accuracies on them and provide models.
+
+## Installation
+
+This code requires:
+
+1. Tensorflow ```r0.12``` or later version.
+
+2. Custom [tensorflow/models](https://github.com/tensorflow/models) repository, which might be [merged](https://github.com/tensorflow/models/pull/684) in a future.
+
+ Simply run:
+ 
+ ```git clone -b fully_conv_vgg https://github.com/warmspringwinds/models```
+ 
+ And add ```models/slim``` subdirectory to your path:
+
+ ```python
+ import sys
+ # update with your path
+ sys.path.append('/home/dpakhom1/workspace/models/slim/')
+ ```
+3. Some libraries which can be acquired by installing [Anaconda package](https://www.continuum.io/downloads).
+ 
+ Or you can install ```scikit-image```, ```matplotlib```, ```numpy``` using ```pip```.
+ 
+4. ```VGG 16``` checkpoint file, which you can get from [here](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz).
+
+5. Clone this library:
+
+ ```git clone https://github.com/warmspringwinds/tf-image-segmentation```
+ 
+ And add it to the path:
+ 
+ ```python
+ import sys
+ # update with your path
+ sys.path.append("/home/dpakhom1/tf_projects/segmentation/tf-image-segmentation/")
+ ```
+
 
 ## PASCAL VOC 2012
 
@@ -39,9 +79,9 @@ This code has been used to train networks with this performance:
 
 | Model            | Test data |Mean IOU | Mean pix. accuracy | Pixel accuracy | Model Download Link |
 |------------------|-----------|---------|--------------------|----------------|---------------------|
-| FCN-32s (ours)   | RV-VOC12  | 62.70   | in prog.           | in prog.       | in prog.            |
-| FCN-16s (ours)   | RV-VOC12  | 63.52   | in prog.           | in prog.       | in prog.            |
-| FCN-8s (ours)    | RV-VOC12  | 63.65   | in prog.           | in prog.       | in prog.            |
+| FCN-32s (ours)   | RV-VOC12  | 62.70   | in prog.           | in prog.       | [Dropbox](https://www.dropbox.com/s/66coqapbva7jpnt/fcn_32s.tar.gz?dl=0)            |
+| FCN-16s (ours)   | RV-VOC12  | 63.52   | in prog.           | in prog.       | [Dropbox](https://www.dropbox.com/s/tmhblqcwqvt2zjo/fcn_16s.tar.gz?dl=0)            |
+| FCN-8s (ours)    | RV-VOC12  | 63.65   | in prog.           | in prog.       | [Dropbox](https://www.dropbox.com/s/7r6lnilgt78ljia/fcn_8s.tar.gz?dl=0)            |
 | FCN-32s (orig.)  | RV-VOC11  | 59.40   | 73.30              | 89.10          |                     |
 | FCN-16s (orig.)  | RV-VOC11  | 62.40   | 75.70              | 90.00          |                     |
 | FCN-8s  (orig.)  | RV-VOC11  | 62.70   | 75.90              | 90.30          |                     |

@@ -32,14 +32,16 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
+num_epochs = 10
 tfrecord_filename = 'pascal_augmented_train.tfrecords'
+num_training_images = 11127
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
 fcn_32s_checkpoint_path = FLAGS.save_dir + 'model_fcn32s_final.ckpt'
 
 filename_queue = tf.train.string_input_producer(
-    [tfrecord_filename], num_epochs=10)
+    [tfrecord_filename], num_epochs=num_epochs)
 
 image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
@@ -126,17 +128,17 @@ with tf.Session()  as sess:
     threads = tf.train.start_queue_runners(coord=coord)
 
     # Let's read off 3 batches just for example
-    for i in xrange(11127 * 10):
+    for i in xrange(num_training_images * num_epochs):
 
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
                                                       train_step ])
 
-        summary_string_writer.add_summary(summary_string, 11127 * 10 + i)
+        summary_string_writer.add_summary(summary_string, num_training_images * num_epochs + i)
 
         print("step :" + str(i) + " Loss: " + str(cross_entropy))
 
-        if i > 0 and i % 11127 == 0:
+        if i > 0 and i % num_training_images == 0:
             save_path = saver.save(sess, FLAGS.save_dir + "model_fcn16s_epoch_" + str(i) + ".ckpt")
             print("Model saved in file: %s" % save_path)
 
