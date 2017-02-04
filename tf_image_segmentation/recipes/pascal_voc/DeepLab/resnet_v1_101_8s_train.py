@@ -11,7 +11,7 @@ from tf_image_segmentation.utils import set_paths # Sets appropriate paths and p
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = os.path.join(FLAGS.log_dir + "deeplab/")
+log_dir = os.path.join(FLAGS.log_dir, "deeplab/")
 
 slim = tf.contrib.slim
 resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
