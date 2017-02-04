@@ -5,7 +5,7 @@ import socket
 
 flags = tf.app.flags
 
-exp = 'deeplab_20_1e6'
+exp = 'deeplab_20_1e3'
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':

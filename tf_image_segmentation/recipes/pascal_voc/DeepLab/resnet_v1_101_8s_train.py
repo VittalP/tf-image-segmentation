@@ -132,10 +132,10 @@ with tf.Session()  as sess:
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
         #feed_dict = {lr_rate: np.asarray( 0.000001 * (1 - i/(11127*10))**0.9   )}
-        feed_dict = {lr_rate: np.asarray( 0.000001 )}
+        feed_dict = {lr_rate: np.asarray( 0.001 )}
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
-                                                      train_step ])
+                                                      train_step ], feed_dict=feed_dict)
 
         print("Iteration: " + str(i) + " Current loss: " + str(cross_entropy))
 
