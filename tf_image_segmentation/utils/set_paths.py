@@ -5,6 +5,7 @@ import socket
 
 flags = tf.app.flags
 
+exp = 'deeplab_20_1e6'
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':
@@ -20,8 +21,8 @@ if machine == 'ccvl-4gpu':
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home/vittal/work/segmentation/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
     flags.DEFINE_string("checkpoints_dir", "/home/vittal/work/ckpts/", "Directory where ImageNet pretrained checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", "Directory to save trained models")
+    flags.DEFINE_string("log_dir", os.path.join("/home/vittal/work/segmentation/tf-image-segmentation/log_dir/", exp), "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", os.path.join("/home/vittal/work/segmentation/tf-image-segmentation/save_dir/", exp), "Directory to save trained models")
     flags.DEFINE_string("data_dir", "/home/vittal/work/segmentation/tf-image-segmentation/data/", "Directory which hosts datasets")
 
 elif 'login' or 'gpu' in machine:
@@ -34,8 +35,8 @@ elif 'login' or 'gpu' in machine:
     # Add path to the cloned library
     flags.DEFINE_string("tf_image_seg_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/", "Dir for tf-image-segmentation repo")
     flags.DEFINE_string("checkpoints_dir", "/home-4/vpremac1@jhu.edu/scratch/ckpts/", "Directory where ImageNet pretrained checkpoints are saved")
-    flags.DEFINE_string("log_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/log_dir/", "Directory to save TF logs")
-    flags.DEFINE_string("save_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/save_dir/", "Directory to save trained models")
+    flags.DEFINE_string("log_dir", os.path.join("/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/log_dir/", exp), "Directory to save TF logs")
+    flags.DEFINE_string("save_dir", os.path.join("/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/save_dir/", exp), "Directory to save trained models")
     flags.DEFINE_string("data_dir", "/home-4/vpremac1@jhu.edu/projects/tf-image-segmentation/data/", "Directory which hosts datasets")
 
 elif "thin6" in machine:

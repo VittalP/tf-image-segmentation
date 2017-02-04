@@ -33,13 +33,15 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
+num_training_images = 11127
+num_epochs = 20
 tfrecord_filename = os.path.join(FLAGS.data_dir + 'pascal_augmented_train.tfrecords')
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
 
 filename_queue = tf.train.string_input_producer(
-    [tfrecord_filename], num_epochs=10)
+    [tfrecord_filename], num_epochs=num_epochs)
 
 image, annotation = read_tfrecord_and_decode_into_image_annotation_pair_tensors(filename_queue)
 
@@ -128,25 +130,26 @@ with tf.Session()  as sess:
     threads = tf.train.start_queue_runners(coord=coord)
 
     # 10 epochs
-    for i in xrange(11127 * 10):
-        feed_dict = {lr_rate: np.asarray( 0.000001 * (1 - i/(11127*10))**0.9   )}
+    for i in xrange(num_training_images * num_epochs):
+        #feed_dict = {lr_rate: np.asarray( 0.000001 * (1 - i/(11127*10))**0.9   )}
+        feed_dict = {lr_rate: np.asarray( 0.000001 )}
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
-                                                      train_step ], feed_dict=feed_dict)
+                                                      train_step ])
 
         print("Iteration: " + str(i) + " Current loss: " + str(cross_entropy))
 
         summary_string_writer.add_summary(summary_string, i)
 
-        if i % 11127 == 0:
-            save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s_epoch_" + str(i) + ".ckpt")
+        if i % num_training_images == 0:
+            save_path = saver.save(sess, os.path.join(FLAGS.save_dir,  "model_resnet_101_8s_epoch_" + str(i) + ".ckpt"))
             print("Model saved in file: %s" % save_path)
 
 
     coord.request_stop()
     coord.join(threads)
 
-    save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s.ckpt")
+    save_path = saver.save(sess, os.path.join(FLAGS.save_dir, "model_resnet_101_8s.ckpt"))
     print("Model saved in file: %s" % save_path)
 
 summary_string_writer.close()
