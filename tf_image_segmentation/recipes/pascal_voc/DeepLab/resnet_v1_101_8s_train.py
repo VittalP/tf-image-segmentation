@@ -11,7 +11,7 @@ from tf_image_segmentation.utils import set_paths # Sets appropriate paths and p
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = os.path.join(FLAGS.log_dir + "deeplab/")
+log_dir = os.path.join(FLAGS.log_dir, "deeplab/")
 
 slim = tf.contrib.slim
 resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
@@ -33,9 +33,9 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
+num_training_images = 11127
 num_epochs = 20
 tfrecord_filename = os.path.join(FLAGS.data_dir + 'pascal_augmented_train.tfrecords')
-num_training_images = 11127
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
@@ -85,7 +85,8 @@ probabilities = tf.nn.softmax(upsampled_logits_batch)
 
 
 with tf.variable_scope("adam_vars"):
-    train_step = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(cross_entropy_sum)
+    lr_rate = tf.placeholder(tf.float32, shape=[])
+    train_step = tf.train.AdamOptimizer(learning_rate=lr_rate).minimize(cross_entropy_sum)
 
 
 # Variable's initialization functions
@@ -130,24 +131,25 @@ with tf.Session()  as sess:
 
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
-
+        feed_dict = {lr_rate: np.asarray( 0.001 * ( (1 - i/(num_training_images*num_epochs))**0.9)   )}
+        #feed_dict = {lr_rate: np.asarray( 0.000001 )}
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
-                                                      train_step ])
+                                                      train_step ], feed_dict=feed_dict)
 
         print("Iteration: " + str(i) + " Current loss: " + str(cross_entropy))
 
         summary_string_writer.add_summary(summary_string, i)
 
         if i % num_training_images == 0:
-            save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s_epoch_" + str(i) + ".ckpt")
+            save_path = saver.save(sess, os.path.join(FLAGS.save_dir,  "model_resnet_101_8s_epoch_" + str(i) + ".ckpt"))
             print("Model saved in file: %s" % save_path)
 
 
     coord.request_stop()
     coord.join(threads)
 
-    save_path = saver.save(sess, FLAGS.save_dir + "model_resnet_101_8s.ckpt")
+    save_path = saver.save(sess, os.path.join(FLAGS.save_dir, "model_resnet_101_8s.ckpt"))
     print("Model saved in file: %s" % save_path)
 
 summary_string_writer.close()
