@@ -31,7 +31,7 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
         Tfrecords filename to write the image/annotation pairs
     """
     writer = tf.python_io.TFRecordWriter(tfrecords_filename)
-
+    i = 0
     for img_path, annotation_path in filename_pairs:
 
         img = np.array(Image.open(img_path))
@@ -61,6 +61,12 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
             'mask_raw': _bytes_feature(annotation_raw)}))
 
         writer.write(example.SerializeToString())
+        if i%1000 == 0:
+            print("Processed " + str(i) + " images...")
+        i = i+1
+
+    print("Processed " + str(i) + " images...")
+    print("Done!")
 
     writer.close()
 
