@@ -5,7 +5,7 @@ import socket
 
 flags = tf.app.flags
 
-exp = 'deeplab_alr_1e3'
+exp = 'mscoco'
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':
@@ -14,7 +14,7 @@ if machine == 'ccvl-4gpu':
     # https://github.com/warmspringwinds/models/tree/fully_conv_vgg
 
     # Use second GPU -- change if you want to use a first one
-    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
     flags.DEFINE_string("slim_path", "/home/vittal/work/tf-slim-models/models/slim", "The path to tf slim repo")
 
