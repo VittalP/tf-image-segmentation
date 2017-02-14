@@ -35,6 +35,12 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
     for img_path, annotation_path in filename_pairs:
 
         img = np.array(Image.open(img_path))
+        if img.ndim == 2:
+            img2 = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8 )
+            img2[:,:,1] = img
+            img2[:,:,2] = img
+            img = img2
+
         annotation = np.array(Image.open(annotation_path))
 
         # The reason to store image sizes was demonstrated
@@ -67,13 +73,13 @@ def read_image_annotation_pairs_from_tfrecord(tfrecords_filename):
     ----------
     tfrecords_filename : string
         filename of .tfrecords file to read from
-    
+
     Returns
     -------
     image_annotation_pairs : array of tuples (img, annotation)
         The image and annotation that were read from the file
     """
-    
+
     image_annotation_pairs = []
 
     record_iterator = tf.python_io.tf_record_iterator(path=tfrecords_filename)
@@ -109,7 +115,7 @@ def read_image_annotation_pairs_from_tfrecord(tfrecords_filename):
         annotation = annotation_1d.reshape((height, width))
 
         image_annotation_pairs.append((img, annotation))
-    
+
     return image_annotation_pairs
 
 
@@ -125,13 +131,13 @@ def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenam
     ----------
     tfrecord_filenames_queue : tfrecord filename queue
         String queue object from tf.train.string_input_producer()
-    
+
     Returns
     -------
     image, annotation : tuple of tf.int32 (image, annotation)
         Tuple of image/annotation tensors
     """
-    
+
     reader = tf.TFRecordReader()
 
     _, serialized_example = reader.read(tfrecord_filenames_queue)
@@ -145,23 +151,23 @@ def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenam
         'mask_raw': tf.FixedLenFeature([], tf.string)
         })
 
-    
+
     image = tf.decode_raw(features['image_raw'], tf.uint8)
     annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
-    
+
     height = tf.cast(features['height'], tf.int32)
     width = tf.cast(features['width'], tf.int32)
-    
+
     image_shape = tf.pack([height, width, 3])
-    
+
     # The last dimension was added because
     # the tf.resize_image_with_crop_or_pad() accepts tensors
     # that have depth. We need resize and crop later.
     # TODO: See if it is necessary and probably remove third
     # dimension
     annotation_shape = tf.pack([height, width, 1])
-    
+
     image = tf.reshape(image, image_shape)
     annotation = tf.reshape(annotation, annotation_shape)
-    
+
     return image, annotation
