@@ -30,15 +30,27 @@ from tf_image_segmentation.utils.training import get_valid_logits_and_labels
 from tf_image_segmentation.utils.augmentation import (distort_randomly_image_color,
                                                       flip_randomly_left_right_image_with_annotation,
                                                       scale_randomly_image_with_annotation_with_fixed_size_output)
-from tensorflow.python.ops import control_flow_ops
 
+dataset = 'mscoco'
 image_train_size = [384, 384]
-number_of_classes = 21
-num_training_images = 11127
+if dataset == 'mscoco':
+	number_of_classes = 81
+	num_training_images = 40137
+	train_dataset = 'mscoco_val2014.tfrecords'
+	class_labels = [i for i in range(number_of_classes)] + [255]
+elif dataset == 'pascal_aug':
+	number_of_classes = 21
+	num_training_images = 11127
+	train_dataset = 'pascal_augmented_train.tfrecords'
+	pascal_voc_lut = pascal_segmentation_lut()
+	class_labels = pascal_voc_lut.keys()
+
 num_epochs = 20
-tfrecord_filename = os.path.join(FLAGS.data_dir + 'pascal_augmented_train.tfrecords')
-pascal_voc_lut = pascal_segmentation_lut()
-class_labels = pascal_voc_lut.keys()
+tfrecord_filename = os.path.join(FLAGS.data_dir, train_dataset)
+
+print(tfrecord_filename)
+#import sys; sys.exit()
+
 
 filename_queue = tf.train.string_input_producer(
     [tfrecord_filename], num_epochs=num_epochs)
@@ -60,11 +72,9 @@ image_batch, annotation_batch = tf.train.shuffle_batch( [resized_image, resized_
                                              capacity=3000,
                                              num_threads=2,
                                              min_after_dequeue=1000)
-
 upsampled_logits_batch, resnet_v1_101_variables_mapping = resnet_v1_101_8s(image_batch_tensor=image_batch,
                                                            number_of_classes=number_of_classes,
-                                                           is_training=True)
-
+                                                           is_training=False)
 
 valid_labels_batch_tensor, valid_logits_batch_tensor = get_valid_logits_and_labels(annotation_batch_tensor=annotation_batch,
                                                                                      logits_batch_tensor=upsampled_logits_batch,
@@ -74,6 +84,7 @@ valid_labels_batch_tensor, valid_logits_batch_tensor = get_valid_logits_and_labe
 
 cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
                                                           labels=valid_labels_batch_tensor)
+
 # Normalize the cross entropy -- the number of elements
 # is different during each step due to mask out regions
 cross_entropy_sum = tf.reduce_mean(cross_entropies)
@@ -82,18 +93,11 @@ pred = tf.argmax(upsampled_logits_batch, dimension=3)
 
 probabilities = tf.nn.softmax(upsampled_logits_batch)
 
-# The code to make the batch normalization's mean and variance
-# ops work:
-# https://github.com/tensorflow/tensorflow/issues/1122
-update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-
-if update_ops:
-    updates = tf.group(*update_ops)
-    cross_entropy_sum = control_flow_ops.with_dependencies([updates], cross_entropy_sum)
 
 with tf.variable_scope("adam_vars"):
     lr_rate = tf.placeholder(tf.float32, shape=[])
     train_step = tf.train.AdamOptimizer(learning_rate=lr_rate).minimize(cross_entropy_sum)
+
 
 # Variable's initialization functions
 resnet_v1_101_without_logits_variables_mapping = extract_resnet_v1_101_mapping_without_logits(resnet_v1_101_variables_mapping)
@@ -115,6 +119,7 @@ if not os.path.exists(log_dir):
      os.makedirs(log_dir)
 if not os.path.exists(FLAGS.save_dir):
      os.makedirs(FLAGS.save_dir)
+
 #The op for initializing the variables.
 local_vars_init_op = tf.local_variables_initializer()
 
@@ -127,18 +132,16 @@ saver = tf.train.Saver(model_variables)
 
 
 with tf.Session()  as sess:
-    
+
     sess.run(combined_op)
     init_fn(sess)
-
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-    
-    
+
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
-        feed_dict = {lr_rate: np.asarray( 0.00001 * ( (1 - i/(num_training_images*num_epochs))**0.9)   )}
-        #feed_dict = {lr_rate: np.asarray( 0.001 )}
+        feed_dict = {lr_rate: np.asarray( 0.0000001 * ( (1 - i/(num_training_images*num_epochs))**0.9)   )}
+        #feed_dict = {lr_rate: np.asarray( 0.000001 )}
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
                                                       train_step ], feed_dict=feed_dict)
