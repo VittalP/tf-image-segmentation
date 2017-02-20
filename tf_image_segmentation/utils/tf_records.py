@@ -6,11 +6,12 @@
 # consider using skimage.io.imread()
 from PIL import Image
 import numpy as np
-import skimage.io as io
 import tensorflow as tf
 import os
 
 # Helper functions for defining tf types
+
+
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
@@ -26,8 +27,12 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
     file.
     Parameters
     ----------
-    filename_pairs : array of tuples (img_filepath, annotation_filepath)
-        Array of tuples of image/annotation filenames
+    filename_pairs : array of tuples (img_filepath, annotation_filepath, [part_annotation_path])
+        Array of tuples of image/annotation/[part_annotation_path] filenames
+
+        [part_annotation_path] is optional -- is present if tfrecords needs to
+        be created along with part-level annotations.
+
     tfrecords_filename : string
         Tfrecords filename to write the image/annotation pairs
     """
@@ -44,9 +49,9 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
 
         img = np.array(Image.open(img_path))
         if img.ndim == 2:
-            img2 = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8 )
-            img2[:,:,1] = img
-            img2[:,:,2] = img
+            img2 = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+            img2[:, :, 1] = img
+            img2[:, :, 2] = img
             img = img2
 
         annotation = np.array(Image.open(annotation_path))
@@ -81,7 +86,7 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
         example = tf.train.Example(features=tf.train.Features(feature))
 
         writer.write(example.SerializeToString())
-        if i%1000 == 0:
+        if i % 1000 == 0:
             print("Processed " + str(i) + " images...")
         i = i+1
 
