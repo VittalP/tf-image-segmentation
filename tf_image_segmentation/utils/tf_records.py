@@ -8,6 +8,7 @@ from PIL import Image
 import numpy as np
 import skimage.io as io
 import tensorflow as tf
+import os
 
 # Helper functions for defining tf types
 def _bytes_feature(value):
@@ -32,7 +33,14 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
     """
     writer = tf.python_io.TFRecordWriter(tfrecords_filename)
     i = 0
-    for img_path, annotation_path in filename_pairs:
+    for ii in range(len(filename_pairs)):
+        ele = filename_pairs[ii]
+        img_path = ele[0]
+        annotation_path = ele[1]
+        part_ = False
+        if(len(ele) == 3):
+            part_annotation_path = ele[2]
+            part_ = True
 
         img = np.array(Image.open(img_path))
         if img.ndim == 2:
@@ -54,11 +62,23 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
         img_raw = img.tostring()
         annotation_raw = annotation.tostring()
 
-        example = tf.train.Example(features=tf.train.Features(feature={
+        feature = {
             'height': _int64_feature(height),
             'width': _int64_feature(width),
             'image_raw': _bytes_feature(img_raw),
-            'mask_raw': _bytes_feature(annotation_raw)}))
+            'mask_raw': _bytes_feature(annotation_raw)}
+
+        if part_ is True:
+            if os.path.exists(part_annotation_path):
+                part_annotation = np.array(Image.open(part_annotation_path))
+            else:
+                part_annotation = np.full(shape=(annotation.shape[0], annotation.shape[1]),
+                                          fill_value=255,
+                                          type=np.uint8)  # Initialize with 255 (ignored while training)
+            part_annotation_raw = part_annotation.tostring()
+            feature['part_mask_raw'] = _bytes_feature(part_annotation_raw)
+
+        example = tf.train.Example(features=tf.train.Features(feature))
 
         writer.write(example.SerializeToString())
         if i%1000 == 0:
@@ -125,7 +145,7 @@ def read_image_annotation_pairs_from_tfrecord(tfrecords_filename):
     return image_annotation_pairs
 
 
-def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenames_queue):
+def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenames_queue, part_=False):
     """Return image/annotation tensors that are created by reading tfrecord file.
     The function accepts tfrecord filenames queue as an input which is usually
     can be created using tf.train.string_input_producer() where filename
@@ -137,29 +157,39 @@ def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenam
     ----------
     tfrecord_filenames_queue : tfrecord filename queue
         String queue object from tf.train.string_input_producer()
+    part_ : a boolean flag that indicates whether the tfrecords contains
+        part-level annotation.
 
     Returns
     -------
-    image, annotation : tuple of tf.int32 (image, annotation)
-        Tuple of image/annotation tensors
+    image, annotation, [part_annotaion]: tuple of tf.int32 (image, annotation, [part_annotation])
+        Tuple of image/annotation/[part_annotation] tensors
+        [part_annotation] is returned if tfrecords contains part-level annotations
     """
 
     reader = tf.TFRecordReader()
 
     _, serialized_example = reader.read(tfrecord_filenames_queue)
 
+    features = {
+      'height': tf.FixedLenFeature([], tf.int64),
+      'width': tf.FixedLenFeature([], tf.int64),
+      'image_raw': tf.FixedLenFeature([], tf.string),
+      'mask_raw': tf.FixedLenFeature([], tf.string)
+      }
+
+    if part_ is True:
+        features['part_mask_raw'] = tf.FixedLenFeature([], tf.string)
+
     features = tf.parse_single_example(
       serialized_example,
-      features={
-        'height': tf.FixedLenFeature([], tf.int64),
-        'width': tf.FixedLenFeature([], tf.int64),
-        'image_raw': tf.FixedLenFeature([], tf.string),
-        'mask_raw': tf.FixedLenFeature([], tf.string)
-        })
-
+      features)
 
     image = tf.decode_raw(features['image_raw'], tf.uint8)
     annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
+
+    if part_ is True:
+        part_annotation = tf.decode_raw(features['part_mask_raw'], tf.uint8)
 
     height = tf.cast(features['height'], tf.int32)
     width = tf.cast(features['width'], tf.int32)
@@ -176,4 +206,8 @@ def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenam
     image = tf.reshape(image, image_shape)
     annotation = tf.reshape(annotation, annotation_shape)
 
-    return image, annotation
+    if part_ is True:
+        part_annotation = tf.reshape(part_annotation, annotation_shape)
+        return image, annotation, part_annotation
+    else:
+        return image, annotation
