@@ -1,9 +1,10 @@
-# file tpyes to ignore
+# file types to ignore
 .ipynb_checkpoints
 *.pyc
 *.tfrecords
 *.log
 *.ckpt*
+*.tar
 
 # Files
 Untitled*
