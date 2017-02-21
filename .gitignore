@@ -3,6 +3,7 @@
 *.pyc
 *.tfrecords
 *.log
+*.ckpt*
 
 # Files
 Untitled*
