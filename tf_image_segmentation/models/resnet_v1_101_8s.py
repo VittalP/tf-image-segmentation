@@ -40,7 +40,7 @@ def extract_resnet_v1_101_mapping_without_logits(resnet_v1_101_variables_mapping
 	print key
         if 'logits' not in key:
             resnet_v1_101_without_logits_keys.append(key)
-    #import sys; sys.exit()
+    # TODO: fix the following hack to get the scope right
     updated_mapping = {'resnet_v1_101_8s/' + key: resnet_v1_101_variables_mapping[key] for key in resnet_v1_101_without_logits_keys}
     
     return updated_mapping
