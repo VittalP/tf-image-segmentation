@@ -37,11 +37,11 @@ def extract_resnet_v1_101_mapping_without_logits(resnet_v1_101_variables_mapping
     resnet_v1_101_without_logits_keys = []
 
     for key in resnet_v1_101_keys:
-
+	print key
         if 'logits' not in key:
             resnet_v1_101_without_logits_keys.append(key)
-
-    updated_mapping = {key: resnet_v1_101_variables_mapping[key] for key in resnet_v1_101_without_logits_keys}
+    #import sys; sys.exit()
+    updated_mapping = {'resnet_v1_101_8s/' + key: resnet_v1_101_variables_mapping[key] for key in resnet_v1_101_without_logits_keys}
     
     return updated_mapping
 
@@ -139,7 +139,6 @@ def resnet_v1_101_8s(image_batch_tensor,
         resnet_v1_101_8s_variables = slim.get_variables(resnet_v1_101_8s)
 
         for variable in resnet_v1_101_8s_variables:
-
             # Here we remove the part of a name of the variable
             # that is responsible for the current variable scope
             original_resnet_v1_101_checkpoint_string = variable.name[len(resnet_v1_101_8s.original_name_scope):-2]
