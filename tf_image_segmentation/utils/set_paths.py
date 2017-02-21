@@ -5,7 +5,7 @@ import socket
 
 flags = tf.app.flags
 
-exp = 'mscoco'
+exp = 'part'
 machine = socket.gethostname()
 
 if machine == 'ccvl-4gpu':
