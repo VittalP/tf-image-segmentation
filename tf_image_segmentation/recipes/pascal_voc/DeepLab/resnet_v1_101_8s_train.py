@@ -14,11 +14,11 @@ checkpoints_dir = FLAGS.checkpoints_dir
 log_dir = os.path.join(FLAGS.log_dir, "deeplab/")
 
 slim = tf.contrib.slim
-resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
-
-if not os.path.isfile(resnet_101_v1_checkpoint_path):
-    import tf_image_segmentation.utils.download_ckpt as dl_ckpt
-    dl_ckpt.download_ckpt('http://download.tensorflow.org/models/resnet_v1_101_2016_08_28.tar.gz')
+#resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_101.ckpt')
+resnet_101_v1_checkpoint_path = os.path.join(checkpoints_dir, 'model_resnet_101_8s_epoch_240822.ckpt')
+#if not os.path.isfile(resnet_101_v1_checkpoint_path):
+#    import tf_image_segmentation.utils.download_ckpt as dl_ckpt
+#    dl_ckpt.download_ckpt('http://download.tensorflow.org/models/resnet_v1_101_2016_08_28.tar.gz')
 
 from tf_image_segmentation.utils.tf_records import read_tfrecord_and_decode_into_image_annotation_pair_tensors
 from tf_image_segmentation.models.resnet_v1_101_8s import resnet_v1_101_8s, extract_resnet_v1_101_mapping_without_logits
@@ -31,12 +31,12 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
                                                       flip_randomly_left_right_image_with_annotation,
                                                       scale_randomly_image_with_annotation_with_fixed_size_output)
 
-dataset = 'mscoco'
+dataset = 'pascal_aug'
 image_train_size = [384, 384]
 if dataset == 'mscoco':
 	number_of_classes = 81
-	num_training_images = 40137
-	train_dataset = 'mscoco_val2014.tfrecords'
+	num_training_images = 82081
+	train_dataset = 'mscoco_train2014.tfrecords'
 	class_labels = [i for i in range(number_of_classes)] + [255]
 elif dataset == 'pascal_aug':
 	number_of_classes = 21
@@ -140,7 +140,7 @@ with tf.Session()  as sess:
 
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
-        feed_dict = {lr_rate: np.asarray( 0.0000001 * ( (1 - i/(num_training_images*num_epochs))**0.9)   )}
+        feed_dict = {lr_rate: np.asarray( 0.0001 * ( (1 - i/(num_training_images*num_epochs))**0.9)   )}
         #feed_dict = {lr_rate: np.asarray( 0.000001 )}
         cross_entropy, summary_string, _ = sess.run([ cross_entropy_sum,
                                                       merged_summary_op,
