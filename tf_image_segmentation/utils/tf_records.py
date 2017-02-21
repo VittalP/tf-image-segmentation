@@ -79,11 +79,11 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
             else:
                 part_annotation = np.full(shape=(annotation.shape[0], annotation.shape[1]),
                                           fill_value=255,
-                                          type=np.uint8)  # Initialize with 255 (ignored while training)
+                                          dtype=np.uint8)  # Initialize with 255 (ignored while training)
             part_annotation_raw = part_annotation.tostring()
             feature['part_mask_raw'] = _bytes_feature(part_annotation_raw)
 
-        example = tf.train.Example(features=tf.train.Features(feature))
+        example = tf.train.Example(features=tf.train.Features(feature=feature))
 
         writer.write(example.SerializeToString())
         if i % 1000 == 0:
