@@ -4,13 +4,17 @@ import skimage.io as io
 import os, sys
 from matplotlib import pyplot as plt
 
+lr = float(sys.argv[1])
+_lambda = float(sys.argv[2])
+exp = sys.argv[3]
 sys.path.append(os.path.join(os.path.join(os.getcwd(), "../../../../../tf-image-segmentation")))
 from tf_image_segmentation.utils import set_paths # Sets appropriate paths and provides access to log_dir and checkpoint_path via FLAGS
 
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = os.path.join(FLAGS.log_dir, "fcn-32s/")
+log_dir = os.path.join(FLAGS.log_dir, exp, "fcn-32s/")
+FLAGS.save_dir = os.path.join(FLAGS.save_dir, exp, "fcn-32s/")
 
 
 slim = tf.contrib.slim
@@ -97,7 +101,6 @@ part_cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_part
 object_cross_entropy = tf.reduce_mean(cross_entropies)
 part_cross_entropy = tf.reduce_mean(part_cross_entropies)
 
-_lambda = 1
 loss = object_cross_entropy + _lambda * part_cross_entropy
 
 pred = tf.argmax(upsampled_logits_batch, dimension=3)
@@ -106,7 +109,8 @@ probabilities = tf.nn.softmax(upsampled_logits_batch)
 
 
 with tf.variable_scope("adam_vars"):
-    train_step = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(loss)
+    train_step_object = tf.train.AdamOptimizer(learning_rate=0.00001).minimize(object_cross_entropy)
+    train_step_part = tf.train.AdamOptimizer(learning_rate=lr).minimize(part_cross_entropy)
 
 
 # Variable's initialization functions
@@ -154,9 +158,10 @@ with tf.Session()  as sess:
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
 
-        cross_entropy, summary_string, _ = sess.run([loss,
+        cross_entropy, summary_string, _, _ = sess.run([loss,
                                                      merged_summary_op,
-                                                     train_step])
+                                                     train_step_object,
+						     train_step_part])
 
         print("Current loss: " + str(cross_entropy))
 
