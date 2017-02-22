@@ -109,8 +109,10 @@ probabilities = tf.nn.softmax(upsampled_logits_batch)
 
 
 with tf.variable_scope("adam_vars"):
-    train_step_object = tf.train.AdamOptimizer(learning_rate=0.00001).minimize(object_cross_entropy)
-    train_step_part = tf.train.AdamOptimizer(learning_rate=lr).minimize(part_cross_entropy)
+    obj_lr_rate = tf.placeholder(tf.float32, shape=[])
+    train_step_object = tf.train.AdamOptimizer(learning_rate=obj_lr_rate).minimize(object_cross_entropy)
+    part_lr_rate = tf.placeholder(tf.float32, shape=[])
+    train_step_part = tf.train.AdamOptimizer(learning_rate=part_lr_rate).minimize(part_cross_entropy)
 
 
 # Variable's initialization functions
@@ -157,11 +159,12 @@ with tf.Session()  as sess:
 
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
-
+	feed_dict = {obj_lr_rate: np.asarray( 0.0001 * ( (1 - i/(num_training_images*num_epochs))**0.9)),
+		     part_lr_rate: np.asarray( lr * ( (1 - i/(num_training_images*num_epochs))**0.9))}
         cross_entropy, summary_string, _, _ = sess.run([loss,
                                                      merged_summary_op,
                                                      train_step_object,
-						     train_step_part])
+						     train_step_part], feed_dict=feed_dict)
 
         print("Current loss: " + str(cross_entropy))
 
