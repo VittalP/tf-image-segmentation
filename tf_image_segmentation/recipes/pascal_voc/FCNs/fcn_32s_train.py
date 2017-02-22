@@ -159,7 +159,7 @@ with tf.Session()  as sess:
 
     # 10 epochs
     for i in xrange(num_training_images * num_epochs):
-	feed_dict = {obj_lr_rate: np.asarray( 0.0001 * ( (1 - i/(num_training_images*num_epochs))**0.9)),
+	feed_dict = {obj_lr_rate: np.asarray( 0.00001 * ( (1 - i/(num_training_images*num_epochs))**0.9)),
 		     part_lr_rate: np.asarray( lr * ( (1 - i/(num_training_images*num_epochs))**0.9))}
         cross_entropy, summary_string, _, _ = sess.run([loss,
                                                      merged_summary_op,
