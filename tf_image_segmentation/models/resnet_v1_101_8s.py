@@ -128,7 +128,28 @@ def resnet_v1_101_8s(image_batch_tensor,
                                           downsampled_logits_shape[3]
                                          ])
 
-        block3_features = end_points['resnet_v1_101_8s/resnet_v1_101/block3']
+        block2_features = end_points['resnet_v1_101_8s/resnet_v1_101/block2']
+        block2_logits = slim.conv2d(block2_features,
+                                    number_of_part_classes,
+                                    [1, 1],
+                                    activation_fn=None,
+                                    normalizer_fn=None,
+                                    weights_initializer=tf.zeros_initializer,
+                                    scope='block2_fc')
+        block2_logits_shape = tf.shape(block2_logits)
+        block2_logits_upsampled_shape = tf.pack([
+                                                 block2_logits_shape[0],
+                                                 block2_logits_shape[1] * 8,
+                                                 block2_logits_shape[2] * 8,
+                                                 block2_logits_shape[3]
+                                                 ])
+
+        block2_upsampled_by_factor_8_logits = tf.nn.conv2d_transpose(block2_logits,
+                                                                     upsample_filter_tensor_part,
+                                                                     output_shape=block2_logits_upsampled_shape,
+                                                                     strides=[1, 8, 8, 1])
+	
+	block3_features = end_points['resnet_v1_101_8s/resnet_v1_101/block3']
         block3_logits = slim.conv2d(block3_features,
                                     number_of_part_classes,
                                     [1, 1],
@@ -149,6 +170,8 @@ def resnet_v1_101_8s(image_batch_tensor,
                                                                      output_shape=block3_logits_upsampled_shape,
                                                                      strides=[1, 8, 8, 1])
 
+	part_logits = block2_upsampled_by_factor_8_logits + block3_upsampled_by_factor_8_logits
+
         # Perform the upsampling
         upsampled_logits = tf.nn.conv2d_transpose(logits,
                                                   upsample_filter_tensor,
@@ -166,7 +189,7 @@ def resnet_v1_101_8s(image_batch_tensor,
 
         for variable in resnet_v1_101_8s_variables:
 
-            if 'block3_fc' in variable.name:
+            if 'block3_fc' in variable.name or 'block2_fc' in variable.name:
                 continue
 
             # Here we remove the part of a name of the variable
@@ -174,4 +197,4 @@ def resnet_v1_101_8s(image_batch_tensor,
             original_resnet_v1_101_checkpoint_string = variable.name[len(resnet_v1_101_8s.original_name_scope):-2]
             resnet_v1_101_8s_variables_mapping[original_resnet_v1_101_checkpoint_string] = variable
 
-    return upsampled_logits, block3_upsampled_by_factor_8_logits, resnet_v1_101_8s_variables_mapping
+    return upsampled_logits, part_logits, resnet_v1_101_8s_variables_mapping

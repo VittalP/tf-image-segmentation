@@ -14,7 +14,7 @@ from tf_image_segmentation.utils import set_paths # Sets appropriate paths and p
 FLAGS = set_paths.FLAGS
 
 checkpoints_dir = FLAGS.checkpoints_dir
-log_dir = os.path.join(FLAGS.log_dir, "deeplab/")
+log_dir = os.path.join(FLAGS.log_dir, exp, "deeplab/")
 FLAGS.save_dir = os.path.join(FLAGS.save_dir, exp, "fcn-32s/")
 
 slim = tf.contrib.slim
