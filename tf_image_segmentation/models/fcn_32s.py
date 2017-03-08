@@ -101,13 +101,13 @@ def FCN_32s(image_batch_tensor,
                                                        number_of_classes)
 
         upsample_filter_tensor = tf.constant(upsample_filter_np)
-        upsample_filter_factor_16_np = bilinear_upsample_weights(factor=16,
-                                                                 number_of_classes=number_of_part_classes)
-        upsample_filter_factor_16_tensor = tf.constant(upsample_filter_factor_16_np)
+        #upsample_filter_factor_16_np = bilinear_upsample_weights(factor=16,
+        #                                                         number_of_classes=number_of_part_classes)
+        #upsample_filter_factor_16_tensor = tf.constant(upsample_filter_factor_16_np)
 
-        upsample_filter_factor_8_np = bilinear_upsample_weights(factor=8,
-                                                                 number_of_classes=number_of_part_classes)
-        upsample_filter_factor_8_tensor = tf.constant(upsample_filter_factor_8_np)
+        #upsample_filter_factor_8_np = bilinear_upsample_weights(factor=8,
+        #                                                         number_of_classes=number_of_part_classes)
+        #upsample_filter_factor_8_tensor = tf.constant(upsample_filter_factor_8_np)
 
         # TODO: make pull request to get this custom vgg feature accepted
         # to avoid using custom slim repo.
@@ -150,34 +150,34 @@ def FCN_32s(image_batch_tensor,
                                                  pool4_logits_shape[2] * 16,
                                                  pool4_logits_shape[3]
                                                  ])
+        pool4_upsampled_by_factor_16_logits = tf.image.resize_bilinear(pool4_logits, [pool4_logits_shape[1]*16, pool4_logits_shape[2]*16])
+        #pool4_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool4_logits,
+        #                                                             upsample_filter_factor_16_tensor,
+        #                                                             output_shape=pool_4_logits_upsampled_shape,
+        #                                                             strides=[1, 16, 16, 1])
 
-        pool4_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool4_logits,
-                                                                     upsample_filter_factor_16_tensor,
-                                                                     output_shape=pool_4_logits_upsampled_shape,
-                                                                     strides=[1, 16, 16, 1])
+        #pool3_features = end_points['fcn_32s/vgg_16/pool3']
+        #pool3_logits = slim.conv2d(pool3_features,
+        #                           number_of_part_classes,
+        #                           [1, 1],
+        #                           activation_fn=None,
+        #                           normalizer_fn=None,
+        #                           weights_initializer=tf.zeros_initializer,
+        #                           scope='pool3_fc')
+        #pool3_logits_shape = tf.shape(pool3_logits)
+        #pool_3_logits_upsampled_shape = tf.pack([
+        #                                         pool3_logits_shape[0],
+        #                                         pool3_logits_shape[1] * 8,
+        #                                         pool3_logits_shape[2] * 8,
+        #                                         pool3_logits_shape[3]
+        #                                         ])
 
-        pool3_features = end_points['fcn_32s/vgg_16/pool3']
-        pool3_logits = slim.conv2d(pool3_features,
-                                   number_of_part_classes,
-                                   [1, 1],
-                                   activation_fn=None,
-                                   normalizer_fn=None,
-                                   weights_initializer=tf.zeros_initializer,
-                                   scope='pool3_fc')
-        pool3_logits_shape = tf.shape(pool3_logits)
-        pool_3_logits_upsampled_shape = tf.pack([
-                                                 pool3_logits_shape[0],
-                                                 pool3_logits_shape[1] * 8,
-                                                 pool3_logits_shape[2] * 8,
-                                                 pool3_logits_shape[3]
-                                                 ])
+        #pool3_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool3_logits,
+        #                                                             upsample_filter_factor_8_tensor,
+        #                                                             output_shape=pool_3_logits_upsampled_shape,
+        #                                                             strides=[1, 8, 8, 1])
 
-        pool3_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool3_logits,
-                                                                     upsample_filter_factor_8_tensor,
-                                                                     output_shape=pool_3_logits_upsampled_shape,
-                                                                     strides=[1, 8, 8, 1])
-
-        part_logits = pool4_upsampled_by_factor_16_logits + pool3_upsampled_by_factor_16_logits
+        part_logits = pool4_upsampled_by_factor_16_logits
         # Map the original vgg-16 variable names
         # to the variables in our model. This is done
         # to make it possible to use assign_from_checkpoint_fn()

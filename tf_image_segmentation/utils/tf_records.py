@@ -55,7 +55,7 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
             img = img2
 
         annotation = np.array(Image.open(annotation_path))
-
+        #print(annotation.shape)
         # The reason to store image sizes was demonstrated
         # in the previous example -- we have to know sizes
         # of images to later read raw serialized string,
@@ -78,11 +78,12 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
                 part_annotation = np.array(Image.open(part_annotation_path))
             else:
                 part_annotation = np.full(shape=(annotation.shape[0], annotation.shape[1]),
-                                          fill_value=255,
-                                          dtype=np.uint8)  # Initialize with 255 (ignored while training)
+                                          fill_value=1102,
+                                          dtype=np.int32)  # Initialize with 255 (ignored while training)
             part_annotation_raw = part_annotation.tostring()
             feature['part_mask_raw'] = _bytes_feature(part_annotation_raw)
-
+        if(img.shape[:2] != annotation.shape or img.shape[:2] != part_annotation.shape):
+            print(img_path)
         example = tf.train.Example(features=tf.train.Features(feature=feature))
 
         writer.write(example.SerializeToString())
@@ -194,7 +195,7 @@ def read_tfrecord_and_decode_into_image_annotation_pair_tensors(tfrecord_filenam
     annotation = tf.decode_raw(features['mask_raw'], tf.uint8)
 
     if part_ is True:
-        part_annotation = tf.decode_raw(features['part_mask_raw'], tf.uint8)
+        part_annotation = tf.decode_raw(features['part_mask_raw'], tf.int32)
 
     height = tf.cast(features['height'], tf.int32)
     width = tf.cast(features['width'], tf.int32)

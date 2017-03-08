@@ -37,10 +37,10 @@ from tf_image_segmentation.utils.augmentation import (distort_randomly_image_col
 
 image_train_size = [384, 384]
 number_of_classes = 21
-number_of_part_classes = 195
+number_of_part_classes = 1102
 num_epochs = 10
-tfrecord_filename = os.path.join(FLAGS.data_dir, 'pascal_part_augmented_train.tfrecords')
-num_training_images = 11127
+tfrecord_filename = os.path.join(FLAGS.data_dir, 'pascal_vc_augmented_train.tfrecords')
+num_training_images = 21332
 pascal_voc_lut = pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
@@ -52,11 +52,9 @@ image = data_tuple[0]
 annotation = data_tuple[1]
 if len(data_tuple) == 3:
     part_annotation = data_tuple[2]
-
 # Various data augmentation stages
 image, annotation, part_annotation = flip_randomly_left_right_image_with_annotation(image, annotation,
                                                                                     part_annotation_tensor=part_annotation)
-
 # image = distort_randomly_image_color(image)
 
 resized_image, resized_annotation, resized_part_annotation = scale_randomly_image_with_annotation_with_fixed_size_output(image,
@@ -86,7 +84,7 @@ valid_labels_batch_tensor, valid_logits_batch_tensor = get_valid_logits_and_labe
 
 valid_part_labels_batch_tensor, valid_part_logits_batch_tensor = get_valid_logits_and_labels(annotation_batch_tensor=part_annotation_batch,
                                                                                              logits_batch_tensor=upsampled_part_logits_batch,
-                                                                                             class_labels=[ii+1 for ii in range(number_of_part_classes)] + [255])
+                                                                                             class_labels= [ii for ii in range(number_of_part_classes)] + [1102])
 
 
 cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
