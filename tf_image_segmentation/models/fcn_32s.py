@@ -135,49 +135,23 @@ def FCN_32s(image_batch_tensor,
                                                   output_shape=upsampled_logits_shape,
                                                   strides=[1, upsample_factor, upsample_factor, 1])
 
+        pool3_features = end_points['fcn_32s/vgg_16/pool3']
+
         pool4_features = end_points['fcn_32s/vgg_16/pool4']
-        pool4_logits = slim.conv2d(pool4_features,
+        pool4_features_shape = tf.shape(pool4_features)
+        pool4_up_features = tf.image.resize_bilinear(pool4_features, [pool4_features_shape[1]*2, pool4_features_shape[2]*2])
+        hyper_features = tf.concat(3, [pool3_features, pool4_up_features])
+        hyper_logits = slim.conv2d(hyper_features,
                                    number_of_part_classes,
                                    [1, 1],
                                    activation_fn=None,
                                    normalizer_fn=None,
                                    weights_initializer=tf.zeros_initializer,
-                                   scope='pool4_fc')
-        pool4_logits_shape = tf.shape(pool4_logits)
-        pool_4_logits_upsampled_shape = tf.pack([
-                                                 pool4_logits_shape[0],
-                                                 pool4_logits_shape[1] * 16,
-                                                 pool4_logits_shape[2] * 16,
-                                                 pool4_logits_shape[3]
-                                                 ])
-        pool4_upsampled_by_factor_16_logits = tf.image.resize_bilinear(pool4_logits, [pool4_logits_shape[1]*16, pool4_logits_shape[2]*16])
-        #pool4_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool4_logits,
-        #                                                             upsample_filter_factor_16_tensor,
-        #                                                             output_shape=pool_4_logits_upsampled_shape,
-        #                                                             strides=[1, 16, 16, 1])
+                                   scope='hyper_fc')
+        hyper_features_shape = tf.shape(hyper_logits)
+        hyper_up_logits = tf.image.resize_bilinear(hyper_logits, [hyper_features_shape[1]*8, hyper_features_shape[2]*8])
 
-        #pool3_features = end_points['fcn_32s/vgg_16/pool3']
-        #pool3_logits = slim.conv2d(pool3_features,
-        #                           number_of_part_classes,
-        #                           [1, 1],
-        #                           activation_fn=None,
-        #                           normalizer_fn=None,
-        #                           weights_initializer=tf.zeros_initializer,
-        #                           scope='pool3_fc')
-        #pool3_logits_shape = tf.shape(pool3_logits)
-        #pool_3_logits_upsampled_shape = tf.pack([
-        #                                         pool3_logits_shape[0],
-        #                                         pool3_logits_shape[1] * 8,
-        #                                         pool3_logits_shape[2] * 8,
-        #                                         pool3_logits_shape[3]
-        #                                         ])
-
-        #pool3_upsampled_by_factor_16_logits = tf.nn.conv2d_transpose(pool3_logits,
-        #                                                             upsample_filter_factor_8_tensor,
-        #                                                             output_shape=pool_3_logits_upsampled_shape,
-        #                                                             strides=[1, 8, 8, 1])
-
-        part_logits = pool4_upsampled_by_factor_16_logits
+        part_logits = hyper_up_logits
         # Map the original vgg-16 variable names
         # to the variables in our model. This is done
         # to make it possible to use assign_from_checkpoint_fn()
@@ -189,7 +163,7 @@ def FCN_32s(image_batch_tensor,
 
         for variable in vgg_16_variables:
 
-            if 'pool4_fc' in variable.name or 'pool3_fc' in variable.name:
+            if 'hyper_fc' in variable.name or 'pool3_fc' in variable.name:
                 continue
 
             # Here we remove the part of a name of the variable
